@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工位餐 · 打工人的麦当劳点单尺</title>
+<style>
+:root{
+--yellow:#FFC72C; --yellowT:#FCEBC0; --red:#DA291C; --redD:#B02216;
+--bg:#FFF6E3; --card:#FFFFFF; --ink:#26251F; --ink2:#7A7365; --ink3:#ABA292;
+--line:rgba(0,0,0,.12); --line2:rgba(0,0,0,.22);
+--good:#2F8F4E; --warn:#E8A020; --bad:#DA291C;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.hero{background:var(--red);padding:26px 20px 24px}
+.hwrap{max-width:1140px;margin:0 auto;display:flex;align-items:center;gap:18px}
+.hwrap svg{flex:none}
+.hero h1{font-size:26px;font-weight:700;margin:0;color:#fff;letter-spacing:.5px}
+.hero .sub{color:rgba(255,255,255,.88);font-size:13.5px;margin:4px 0 0}
+.hero .tags{margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.tag{font-size:11px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:99px;padding:2px 10px;white-space:nowrap}
+@media (max-width:640px){.hero .tags{display:none}.hero h1{font-size:22px}}
+.wrap{max-width:1140px;margin:0 auto;padding:22px 20px 60px}
+.grid{display:grid;grid-template-columns:1fr 400px;gap:18px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px;
+box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.ptitle{font-size:13px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px;letter-spacing:.3px}
+.ptitle .n{width:20px;height:20px;border-radius:6px;background:var(--yellow);color:var(--ink);
+font-size:12px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.scenes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:560px){.scenes{grid-template-columns:repeat(2,1fr)}}
+.scene{border:none;border-radius:12px;padding:12px 8px 11px;cursor:pointer;text-align:center;
+background:var(--yellow);color:var(--ink);transition:.15s;font-family:inherit}
+.scene:hover{transform:translateY(-2px)}
+.scene.on{background:var(--red);color:#fff}
+.scene .t{font-size:14px;font-weight:700;display:block}
+.scene .h{font-size:11px;opacity:.72;display:block;margin-top:1px;font-variant-numeric:tabular-nums}
+.scene .d{font-size:11px;opacity:.82;display:block;margin-top:6px;line-height:1.45}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tab{border:1px solid var(--line);background:transparent;color:var(--ink2);border-radius:99px;
+padding:4px 13px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500}
+.tab.on{background:var(--yellow);color:var(--ink);border-color:var(--yellow);font-weight:700}
+input.search{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;
+background:#fff;color:var(--ink);font-size:13px;font-family:inherit;margin-bottom:10px;outline:none}
+input.search:focus{border-color:var(--yellow)}
+.list{max-height:330px;overflow-y:auto;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+.row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);
+cursor:pointer;font-size:13px}
+.row:last-child{border-bottom:none}
+.row:hover{background:#FFF8E6}
+.row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.row .mt{font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .add{width:20px;height:20px;border-radius:6px;background:var(--yellow);color:var(--ink);
+font-weight:700;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+.pick{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{background:#FFF3D1;border:1.5px solid var(--yellow);border-radius:9px;padding:5px 10px;
+font-size:12px;display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.chip .x{cursor:pointer;color:var(--ink2);font-size:14px;line-height:1}
+.chip .x:hover{color:var(--red)}
+.empty{color:var(--ink3);font-size:12px;padding:6px 0}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{border:1.5px dashed var(--yellow);background:#FFFBF0;color:var(--ink2);
+border-radius:9px;padding:4px 11px;font-size:11.5px;cursor:pointer;font-family:inherit;font-weight:500}
+.presets button:hover{color:var(--red);border-color:var(--red);border-style:solid}
+.bigscore{display:flex;align-items:baseline;gap:8px;margin:2px 0 4px}
+.bigscore .v{font-size:56px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--red);
+font-variant-numeric:tabular-nums}
+.bigscore .u{font-size:13px;color:var(--ink3);font-weight:500}
+.verdict{font-size:13px;color:var(--ink2);min-height:20px;margin:0 0 14px}
+.dim{margin-bottom:11px}
+.dim .hd{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.dim .hd .lb{color:var(--ink2);font-weight:500}
+.dim .hd .vl{font-variant-numeric:tabular-nums;color:var(--ink)}
+.dim .hd .vl em{font-style:normal;color:var(--ink3);font-size:11px}
+.bar{height:8px;border-radius:99px;background:var(--yellowT);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .25s}
+.note{font-size:12px;color:var(--ink2);background:#FFF8E6;border-radius:10px;padding:10px 12px;
+margin:12px 0 0;line-height:1.55}
+.note b{font-weight:700;color:var(--ink)}
+.swaps{margin-top:4px}
+.swap{border:1.5px solid var(--line);border-radius:11px;padding:9px 12px;margin-bottom:7px;font-size:12.5px;background:#fff}
+.swap .a{color:var(--ink2)}
+.swap .b{font-weight:700}
+.swap .g{color:#fff;background:var(--good);font-variant-numeric:tabular-nums;float:right;
+font-weight:700;border-radius:99px;padding:1px 9px;font-size:11.5px}
+.swap .why{color:var(--ink3);font-size:11px;margin-top:4px;font-variant-numeric:tabular-nums}
+.btn{width:100%;margin-top:12px;padding:11px;border:none;background:var(--yellow);color:var(--ink);
+border-radius:11px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:700}
+.btn:hover{filter:brightness(1.05)}
+.btn.pri{background:var(--red);color:#fff}
+.btn.pri:hover{background:var(--redD);filter:none}
+.foot{margin-top:22px;font-size:11.5px;color:var(--ink3);line-height:1.7;max-width:760px}
+.foot b{color:var(--ink2);font-weight:500}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hwrap">
+    <svg width="52" height="44" viewBox="0 0 80 66" aria-label="金色拱门">
+      <path d="M14 60 V30 C14 8 36 8 36 30 V60" fill="none" stroke="#FFC72C" stroke-width="11" stroke-linecap="round"/>
+      <path d="M40 60 V30 C40 8 62 8 62 30 V60" fill="none" stroke="#FFC72C" stroke-width="11" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>工位餐</h1>
+      <p class="sub">打工人的麦当劳点单尺 —— 同一份订单，12:00 吃和 21:30 吃，不是一回事。</p>
+    </div>
+    <div class="tags">
+      <span class="tag">久坐打工人的麦当劳点单尺</span>
+      <span class="tag">数据来源：麦当劳官方营养接口 158 条 · 零配置打开即玩</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="grid">
+<div>
+  <div class="panel">
+    <p class="ptitle"><span class="n">1</span>现在是哪一顿</p>
+    <div class="scenes" id="scenes"></div>
+  </div>
+
+  <div class="panel">
+    <p class="ptitle"><span class="n">2</span>点了什么</p>
+    <div class="presets" id="presets"></div>
+    <input class="search" id="q" placeholder="搜餐品，比如 巨无霸 / 牛奶 / 薯条" style="margin-top:10px">
+    <div class="tabs" id="tabs"></div>
+    <div class="list" id="list"></div>
+    <div class="pick" id="pick"></div>
+  </div>
+</div>
+
+<div>
+  <div class="panel" id="card">
+    <p class="ptitle"><span class="n">3</span>这一顿怎么样</p>
+    <div class="bigscore"><span class="v" id="score">–</span><span class="u" id="scoreu">/ 100</span></div>
+    <p class="verdict" id="verdict">先在左边选个时段，再挑几样吃的。</p>
+    <div id="dims"></div>
+    <div class="note" id="insight"></div>
+    <button class="btn pri" id="shot">生成分享卡片 PNG</button>
+  </div>
+
+  <div class="panel">
+    <p class="ptitle"><span class="n">4</span>换一样能更好</p>
+    <div class="swaps" id="swaps"><div class="empty">选好餐品后，这里会给出具体的替换建议。</div></div>
+  </div>
+</div>
+</div>
+
+<p class="foot">
+<b>评分规则完全开源</b>，是本项目自定义的个人偏好模型，不是医学或营养建议：热量按场景预算打分，钠的扣分最重（久坐打工人真正被坑的往往是它），蛋白按场景目标给分，碳水负荷代表犯困成本、在下午场景权重最高。<br>
+<b>免责声明：</b>营养数据取自麦当劳中国官方接口，仅供个人参考。个体差异很大，有特殊健康状况请遵医嘱。「工位餐」为比赛参赛作品，与麦当劳公司无隶属关系。
+</p>
+</div>
+
+<script src="data.js"></script>
+<script>
+var SCENES={
+ lunch:{t:'工作午餐',h:'12:00',d:'下午还要连坐四小时',kcal:700,na:800,pro:25,carb:110,w:{cal:.28,na:.30,pro:.22,dr:.20}},
+ tea:{t:'下午茶',h:'15:30',d:'撑到下班，别犯困',kcal:250,na:300,pro:8,carb:35,w:{cal:.30,na:.25,pro:.15,dr:.30}},
+ dinner:{t:'下班餐',h:'19:00',d:'今天最后一顿正餐',kcal:750,na:900,pro:28,carb:120,w:{cal:.28,na:.28,pro:.26,dr:.18}},
+ night:{t:'加班夜宵',h:'21:30',d:'吃完很快就躺下',kcal:380,na:450,pro:15,carb:45,w:{cal:.38,na:.32,pro:.18,dr:.12}}
+};
+var PRESETS={
+ '经典午餐':['巨无霸','中薯条','可乐中杯'],
+ '赶时间早餐':['猪柳蛋麦满分','小杯鲜萃咖啡'],
+ '加班夜宵':['麦辣鸡腿汉堡','中薯条','可乐中杯'],
+ '控钠示范':['原味板烧鸡腿麦满分','冰牛奶大杯','大杯玉米杯']
+};
+var GROUPS=['主食','小食','饮品','甜品','早餐'];
+var scene='lunch', picked=[], tab='主食', kw='';
+
+function nowScene(){
+ var h=new Date().getHours();
+ if(h<14)return 'lunch'; if(h<17)return 'tea';
+ if(h<20)return 'dinner'; return 'night';
+}
+
+function med(arr){var a=arr.slice().sort(function(x,y){return x-y});return a[Math.floor(a.length/2)]}
+var NA_DENS=med(FOODS.filter(function(f){return f.kcal>=90}).map(function(f){return f.na/f.kcal*100}));
+var PRO_DENS=med(FOODS.filter(function(f){return f.kcal>=90}).map(function(f){return f.p/f.kcal*100}));
+
+function clamp(v){return Math.max(0,Math.min(100,v))}
+function sum(list){
+ var o={kcal:0,p:0,f:0,c:0,na:0,ca:0};
+ list.forEach(function(f){o.kcal+=f.kcal;o.p+=f.p;o.f+=f.f;o.c+=f.c;o.na+=f.na;o.ca+=f.ca});
+ return o;
+}
+function score(list,sk){
+ var s=SCENES[sk],t=sum(list);
+ var r=t.kcal/s.kcal, nr=t.na/s.na, cr=t.c/s.carb;
+ var cal=100;
+ if(r>1) cal=100-(r-1)*110; else if(r<0.6) cal=100-(0.6-r)/0.6*45;
+ var na=100; if(nr>1) na=100-(nr-1)*110;
+ var pro=clamp(t.p/s.pro*100);
+ var dr=100; if(cr>1) dr=100-(cr-1)*80;
+ cal=clamp(cal);na=clamp(na);dr=clamp(dr);
+ var w=s.w;
+ var tot=Math.round(cal*w.cal+na*w.na+pro*w.pro+dr*w.dr);
+ if(Math.min(cal,na,pro,dr)<25) tot=Math.min(tot,45);
+ return {total:tot,
+  cal:Math.round(cal),na:Math.round(na),pro:Math.round(pro),dr:Math.round(dr),tot:t,s:s};
+}
+
+function drawScenes(){
+ document.getElementById('scenes').innerHTML=Object.keys(SCENES).map(function(k){
+  var s=SCENES[k];
+  return '<div class="scene'+(k===scene?' on':'')+'" data-k="'+k+'">'+
+   '<span class="t">'+s.t+'</span><span class="h">'+s.h+'</span><span class="d">'+s.d+'</span></div>';
+ }).join('');
+ [].forEach.call(document.querySelectorAll('.scene'),function(e){
+  e.onclick=function(){scene=e.dataset.k;drawScenes();render()};
+ });
+}
+function drawPresets(){
+ document.getElementById('presets').innerHTML='试试：'+Object.keys(PRESETS).map(function(k){
+  return '<button data-p="'+k+'">'+k+'</button>';
+ }).join('');
+ [].forEach.call(document.querySelectorAll('#presets button'),function(e){
+  e.onclick=function(){
+   picked=PRESETS[e.dataset.p].map(function(n){
+    return FOODS.filter(function(f){return f.n===n})[0];}).filter(Boolean);
+   render();
+  };
+ });
+}
+function drawTabs(){
+ document.getElementById('tabs').innerHTML=GROUPS.map(function(g){
+  return '<button class="tab'+(g===tab?' on':'')+'" data-g="'+g+'">'+g+'</button>';
+ }).join('');
+ [].forEach.call(document.querySelectorAll('.tab'),function(e){
+  e.onclick=function(){tab=e.dataset.g;drawTabs();drawList()};
+ });
+}
+function drawList(){
+ var fs=FOODS.filter(function(f){
+  if(tab!=='全部'&&f.g!==tab)return false;
+  if(kw&&f.n.indexOf(kw)<0)return false;
+  return true;
+ });
+ if(!fs.length){document.getElementById('list').innerHTML='<div class="empty" style="padding:12px">换个词试试</div>';return}
+ document.getElementById('list').innerHTML=fs.slice(0,120).map(function(f){
+  return '<div class="row" data-n="'+f.n+'"><span class="nm">'+f.n+'</span>'+
+   '<span class="mt">'+Math.round(f.kcal)+'kcal · 蛋白'+Math.round(f.p)+'g · 钠'+Math.round(f.na)+'mg</span>'+
+   '<span class="add">+</span></div>';
+ }).join('');
+ [].forEach.call(document.querySelectorAll('.row'),function(e){
+  e.onclick=function(){
+   var f=FOODS.filter(function(x){return x.n===e.dataset.n})[0];
+   if(picked.indexOf(f)<0){picked.push(f);render();}
+  };
+ });
+}
+function drawPick(){
+ var el=document.getElementById('pick');
+ if(!picked.length){el.innerHTML='<div class="empty">还没选，点上面的餐品加进来。</div>';return}
+ el.innerHTML=picked.map(function(f,i){
+  return '<span class="chip">'+f.n+'<span class="x" data-i="'+i+'">×</span></span>';
+ }).join('');
+ [].forEach.call(document.querySelectorAll('.chip .x'),function(e){
+  e.onclick=function(){picked.splice(+e.dataset.i,1);render()};
+ });
+}
+function col(v){return v>=75?'#2F8F4E':(v>=50?'#E8A020':'#DA291C')}
+function dim(lb,v,txt,budget){
+ return '<div class="dim"><div class="hd"><span class="lb">'+lb+'</span>'+
+  '<span class="vl">'+txt+' <em>/ '+budget+'</em></span></div>'+
+  '<div class="bar"><i style="width:'+v+'%;background:'+col(v)+'"></i></div></div>';
+}
+function render(){
+ drawPick();
+ var el=document.getElementById('score'),vd=document.getElementById('verdict'),
+  dm=document.getElementById('dims'),ins=document.getElementById('insight');
+ if(!picked.length){
+  el.textContent='–';el.style.color='var(--ink)';
+  vd.textContent='先在左边选个时段，再挑几样吃的。';dm.innerHTML='';ins.innerHTML='';
+  document.getElementById('swaps').innerHTML='<div class="empty">选好餐品后，这里会给出具体的替换建议。</div>';
+  return;
+ }
+ var r=score(picked,scene),s=r.s,t=r.tot;
+ el.textContent=r.total;el.style.color=col(r.total);
+ document.getElementById('scoreu').textContent='/ 100 · '+s.t;
+
+ var weak=[['钠',r.na,'na'],['热量',r.cal,'cal'],['蛋白',r.pro,'pro'],['犯困',r.dr,'dr']]
+  .sort(function(a,b){return a[1]-b[1]})[0];
+ var vmap={
+  na:'这一顿的钠是最大扣分项。久坐打工人最容易忽略的就是它。',
+  cal:'热量超出了这个时段的预算，往下压一点。',
+  pro:'蛋白没吃够，久坐一天本来就在流失。',
+  dr:'碳水负荷偏高，接下来几小时大概率会困。'
+ };
+ vd.textContent=(r.total>=80?'这顿搭配得挺好。':(r.total>=60?'及格，但'+weak[0]+'还能再压一压。':'这顿在'+s.t+'这个时段有点勉强 —— '))+vmap[weak[2]];
+
+ dm.innerHTML=
+  dim('热量',r.cal,Math.round(t.kcal)+' kcal',s.kcal+' kcal')+
+  dim('钠',r.na,Math.round(t.na)+' mg',s.na+' mg')+
+  dim('蛋白',r.pro,Math.round(t.p)+' g',s.pro+' g 目标')+
+  dim('犯困成本',r.dr,Math.round(t.c)+' g 碳水',s.carb+' g');
+
+ var nd=t.kcal>0?t.na/t.kcal*100:0, pd=t.kcal>0?t.p/t.kcal*100:0;
+ var lv=nd>NA_DENS*1.25?'偏高':(nd<NA_DENS*0.75?'偏低':'中等');
+ ins.innerHTML='<b>密度体检：</b>这顿的钠密度 <b>'+Math.round(nd)+'</b> mg/100kcal（全库中位数 '+Math.round(NA_DENS)+'，你这顿'+lv+
+  '），蛋白密度 <b>'+pd.toFixed(1)+'</b> g/100kcal（中位数 '+PRO_DENS.toFixed(1)+'）。'+
+  (nd>NA_DENS*1.25?'<br>钠密度偏高时，把其中一样换成牛奶或黑咖，往往比减量更有效。':'');
+
+ var cur=r.total,out=[];
+ for(var i=0;i<picked.length;i++){
+  var base=picked.slice();
+  for(var j=0;j<FOODS.length;j++){
+   var f=FOODS[j];
+   if(base.indexOf(f)>=0)continue;
+   if(f.g!==base[i].g)continue;
+   var cp=base.slice();cp[i]=f;
+   var sc=score(cp,scene).total;
+   if(sc>cur+1)out.push({from:picked[i],to:f,gain:sc-cur,dna:Math.round(sum([f]).na-sum([picked[i]]).na)});
+  }
+ }
+ out.sort(function(a,b){return b.gain-a.gain});
+ var seen={},top=[];
+ out.forEach(function(o){if(!seen[o.to.n]&&top.length<5){seen[o.to.n]=1;top.push(o)}});
+ var sw=document.getElementById('swaps');
+ if(!top.length){sw.innerHTML='<div class="empty">当前搭配已经接近这个时段的最优，换任何一样都会更差。</div>'}
+ else{
+  sw.innerHTML=top.map(function(o){
+   return '<div class="swap"><span class="g">+'+o.gain+' 分</span>'+
+    '<div><span class="a">'+o.from.n+'</span> → <span class="b">'+o.to.n+'</span></div>'+
+    '<div class="why">钠 '+(o.dna>=0?'+':'')+o.dna+'mg · '+
+    Math.round(o.to.kcal)+'kcal · 蛋白'+Math.round(o.to.p)+'g</div></div>';
+  }).join('');
+ }
+}
+
+function arches(x,cx,cy,scale,color){
+ x.strokeStyle=color;x.lineWidth=11*scale;x.lineCap='round';
+ x.beginPath();x.moveTo(cx-26*scale,cy+30*scale);x.lineTo(cx-26*scale,cy);
+ x.bezierCurveTo(cx-26*scale,cy-22*scale,cx-4*scale,cy-22*scale,cx-4*scale,cy);
+ x.lineTo(cx-4*scale,cy+30*scale);x.stroke();
+ x.beginPath();x.moveTo(cx+4*scale,cy+30*scale);x.lineTo(cx+4*scale,cy);
+ x.bezierCurveTo(cx+4*scale,cy-22*scale,cx+26*scale,cy-22*scale,cx+26*scale,cy);
+ x.lineTo(cx+26*scale,cy+30*scale);x.stroke();
+}
+
+function shot(){
+ var r=score(picked,scene),s=r.s,t=r.tot;
+ var W=750,H=1000,c=document.createElement('canvas');
+ c.width=W;c.height=H;
+ var x=c.getContext('2d');
+ x.fillStyle='#FFF6E3';x.fillRect(0,0,W,H);
+ x.fillStyle='#DA291C';x.fillRect(0,0,W,150);
+ arches(x,84,58,1.15,'#FFC72C');
+ x.fillStyle='#FFFFFF';x.font='700 34px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+ x.fillText('工位餐',150,66);
+ x.fillStyle='rgba(255,255,255,.9)';x.font='400 16px -apple-system,"PingFang SC",sans-serif';
+ x.fillText(s.t+' · '+s.h+' · '+s.d,150,98);
+
+ x.fillStyle='#26251F';x.font='500 15px -apple-system,"PingFang SC",sans-serif';
+ x.fillText('这一顿的分数',44,206);
+ x.fillStyle=col(r.total);
+ x.font='700 108px -apple-system,"PingFang SC",sans-serif';
+ x.fillText(String(r.total),40,304);
+ x.fillStyle='#ABA292';x.font='500 17px -apple-system,"PingFang SC",sans-serif';
+ x.fillText('/ 100',46+x.measureText(String(r.total)).width+96,304);
+
+ var dims=[['热量',r.cal,Math.round(t.kcal)+' kcal',s.kcal+' kcal'],
+  ['钠',r.na,Math.round(t.na)+' mg',s.na+' mg'],
+  ['蛋白',r.pro,Math.round(t.p)+' g',s.pro+' g'],
+  ['犯困成本',r.dr,Math.round(t.c)+' g 碳水',s.carb+' g']];
+ var y=352;
+ dims.forEach(function(d){
+  x.fillStyle='#26251F';x.font='500 16px -apple-system,"PingFang SC",sans-serif';x.fillText(d[0],44,y);
+  x.fillStyle='#ABA292';x.font='400 15px -apple-system,"PingFang SC",sans-serif';
+  var rt=d[2]+'  /  '+d[3];
+  x.fillText(rt,W-44-x.measureText(rt).width,y);
+  x.fillStyle='#FCEBC0';x.fillRect(44,y+12,W-88,8);
+  x.fillStyle=col(d[1]);x.fillRect(44,y+12,(W-88)*d[1]/100,8);
+  y+=56;
+ });
+
+ y+=8;
+ x.fillStyle='#26251F';x.font='500 16px -apple-system,"PingFang SC",sans-serif';
+ x.fillText('这一顿吃了',44,y);y+=30;
+ picked.forEach(function(f){
+  x.fillStyle='#3A3936';x.font='400 15px -apple-system,"PingFang SC",sans-serif';
+  x.fillText('· '+f.n,52,y);
+  x.fillStyle='#ABA292';x.font='400 14px -apple-system,"PingFang SC",sans-serif';
+  var m=Math.round(f.kcal)+'kcal · 蛋白'+Math.round(f.p)+'g · 钠'+Math.round(f.na)+'mg';
+  x.fillText(m,W-44-x.measureText(m).width,y);
+  y+=28;
+ });
+
+ x.fillStyle='#FFFFFF';x.fillRect(44,H-146,W-88,86);
+ x.fillStyle='#7A7365';x.font='400 13px -apple-system,"PingFang SC",sans-serif';
+ x.fillText('营养数据来自麦当劳中国官方接口，评分规则为本项目',62,H-112);
+ x.fillText('自定义的偏好模型，不构成医学或营养建议。',62,H-92);
+ x.fillText('工位餐 · 参赛作品，与麦当劳公司无隶属关系',62,H-72);
+
+ var a=document.createElement('a');
+ a.download='工位餐_'+s.t+'_'+r.total+'分.png';
+ a.href=c.toDataURL('image/png');a.click();
+}
+
+document.getElementById('q').oninput=function(e){kw=e.target.value.trim();
+ if(kw){tab='全部';drawTabs();}drawList();};
+document.getElementById('shot').onclick=shot;
+scene=nowScene();
+drawScenes();drawPresets();drawTabs();drawList();render();
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+name: 刷新营养数据
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 拉取官方 MCP 营养数据
+        env:
+          MCD_MCP_TOKEN: ${{ secrets.MCD_MCP_TOKEN }}
+        run: node scripts/fetch-nutrition.mjs
+
+      - name: 提交变更
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data.js; then
+            echo "数据无变化，跳过提交"
+          else
+            git add data.js
+            git commit -m "chore: 刷新餐品营养数据 $(date +%Y-%m-%d)"
+            git push
+          fi
