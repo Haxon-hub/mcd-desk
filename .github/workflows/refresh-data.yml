@@ -11,6 +11,8 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    # 未配置 MCD_MCP_TOKEN 时静默跳过，避免每天收到失败邮件
+    if: ${{ secrets.MCD_MCP_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
 
