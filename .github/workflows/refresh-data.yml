@@ -11,8 +11,6 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    # 未配置 MCD_MCP_TOKEN 时静默跳过，避免每天收到失败邮件
-    if: ${{ secrets.MCD_MCP_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -20,12 +18,21 @@ jobs:
         with:
           node-version: '22'
 
+      # 未配置 MCD_MCP_TOKEN 时后续步骤全部跳过（secrets 不能用在 job 级 if，只能这样中转）
+      - name: 检查 Token
+        id: guard
+        env:
+          HAS_TOKEN: ${{ secrets.MCD_MCP_TOKEN != '' }}
+        run: echo "has_token=$HAS_TOKEN" >> "$GITHUB_OUTPUT"
+
       - name: 拉取官方 MCP 营养数据
+        if: steps.guard.outputs.has_token == 'true'
         env:
           MCD_MCP_TOKEN: ${{ secrets.MCD_MCP_TOKEN }}
         run: node scripts/fetch-nutrition.mjs
 
       - name: 提交变更
+        if: steps.guard.outputs.has_token == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
